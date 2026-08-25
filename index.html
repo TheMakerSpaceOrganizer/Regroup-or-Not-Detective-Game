@@ -1,1 +1,842 @@
-https://share.gemini.google/4lyy7kYbI4AJ
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detective Pencil and the Case of the Missing Golden Badge</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti for Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #0f172a;
+            color: #1e293b;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .font-heading {
+            font-family: 'Fredoka', cursive;
+        }
+
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(250, 204, 21, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(250, 204, 21, 0.9); }
+        }
+
+        @keyframes float-card {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        @keyframes highlight-ones-pulse {
+            0%, 100% { background-color: rgba(239, 68, 68, 0.2); transform: scale(1); }
+            50% { background-color: rgba(239, 68, 68, 0.5); transform: scale(1.1); }
+        }
+
+        .animate-bounce-gentle {
+            animation: bounce-gentle 2.5s infinite ease-in-out;
+        }
+
+        .animate-float {
+            animation: float-card 3.5s infinite ease-in-out;
+        }
+
+        .ones-highlight {
+            animation: highlight-ones-pulse 0.9s infinite ease-in-out;
+            border-radius: 8px;
+            padding: 2px 6px;
+        }
+
+        /* Storybook Panel Styling matching reference art */
+        .storybook-panel {
+            background: #fffdf5;
+            border: 5px solid #fbbf24;
+            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(251, 191, 36, 0.15);
+            border-radius: 1.75rem;
+        }
+
+        /* Speech Bubble Tail matching reference art */
+        .speech-bubble-tail {
+            position: absolute;
+            bottom: -14px;
+            left: 30%;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 14px solid #78350f;
+        }
+        .speech-bubble-tail-inner {
+            position: absolute;
+            bottom: -10px;
+            left: 30%;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 11px solid #fffdf5;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f59e0b;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4 bg-slate-950">
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="game-container" class="relative w-full max-w-5xl h-[680px] rounded-3xl overflow-hidden shadow-2xl flex flex-col border-4 border-amber-400 bg-slate-900 transition-all duration-500">
+        
+        <!-- 1. TOP HEADER (Yellow Banner matching Reference Art) -->
+        <header class="bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-4 py-2.5 flex justify-between items-center shadow-md border-b-4 border-amber-600 z-30 shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="bg-white p-2 rounded-full border-2 border-amber-600 shadow-md flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 shrink-0">
+                    <span class="text-xl sm:text-2xl">🔍</span>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-amber-950 leading-none font-heading tracking-tight">Detective Pencil</h1>
+                    <p class="text-xs sm:text-sm font-bold text-amber-900 mt-0.5">The Case of the Missing Golden Badge</p>
+                </div>
+            </div>
+
+            <!-- Clues Counter Pill & Sound Controls -->
+            <div class="flex items-center gap-2.5">
+                <button onclick="toggleClueModal()" class="cursor-pointer bg-white/95 hover:bg-white px-3.5 py-1.5 rounded-full border-2 border-amber-600 font-extrabold text-amber-950 text-xs sm:text-sm shadow-md flex items-center gap-1.5 transition-transform hover:scale-105 active:scale-95">
+                    <span class="text-base sm:text-lg">📓</span> Clues: <span id="clue-count-badge" class="text-amber-700 font-black">0/6</span>
+                </button>
+
+                <button id="audio-toggle" onclick="toggleAudio()" class="bg-white/95 hover:bg-white text-amber-950 p-2 sm:p-2.5 rounded-full border-2 border-amber-600 shadow-md transition-transform active:scale-95 text-base flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10" title="Toggle Sound">
+                    🔊
+                </button>
+            </div>
+        </header>
+
+        <!-- 2. MAIN GAME AREA (STRICT 30% LEFT / 70% RIGHT SPLIT) -->
+        <div id="scene-viewport" class="relative flex-1 bg-gradient-to-br from-amber-900 via-amber-950 to-stone-900 overflow-hidden flex flex-row p-3 sm:p-5 gap-4 transition-all duration-700 items-stretch">
+            
+            <!-- LEFT CHARACTER AREA (Strictly ~28% width - Pencil & Dialogue, NEVER overlapped) -->
+            <div id="left-character-area" class="w-[30%] sm:w-[28%] flex flex-col justify-between items-center z-20 shrink-0 h-full py-1 pr-1">
+                
+                <!-- Speech Bubble -->
+                <div id="speech-bubble" class="w-full bg-[#fffdf5] border-3 border-amber-800 rounded-2xl p-3 sm:p-3.5 shadow-xl relative transform transition-all duration-300 my-auto text-left border-amber-700">
+                    <p id="speech-text" class="text-slate-800 text-xs sm:text-sm font-bold leading-tight sm:leading-snug">
+                        OH NO! My special <span class="text-amber-600 font-extrabold underline">Golden Badge</span> is missing! Someone took it from me!
+                    </p>
+                    <div class="speech-bubble-tail"></div>
+                    <div class="speech-bubble-tail-inner"></div>
+                </div>
+
+                <!-- Cartoon Detective Pencil SVG -->
+                <div id="pencil-svg-wrapper" class="w-28 sm:w-36 h-36 sm:h-48 relative animate-bounce-gentle shrink-0 mb-1">
+                    <svg viewBox="0 0 200 260" class="w-full h-full drop-shadow-2xl">
+                        <!-- Deerstalker Detective Hat -->
+                        <path d="M 35 70 C 35 35, 165 35, 165 70 Z" fill="#8B5A2B" stroke="#3D230D" stroke-width="4"/>
+                        <ellipse cx="100" cy="70" rx="78" ry="14" fill="#A0522D" stroke="#3D230D" stroke-width="4"/>
+                        <path d="M 40 68 Q 20 88 32 102" stroke="#3D230D" stroke-width="4" fill="#8B5A2B"/>
+                        <path d="M 160 68 Q 180 88 168 102" stroke="#3D230D" stroke-width="4" fill="#8B5A2B"/>
+                        <path d="M 90 52 L 110 52 Q 100 64 90 52" fill="#3D230D"/>
+
+                        <!-- Eraser & Metal Ferrule Band -->
+                        <path d="M 60 75 L 140 75 L 140 95 L 60 95 Z" fill="#FF85A1" stroke="#333" stroke-width="3"/>
+                        <path d="M 58 95 L 142 95 L 142 110 L 58 110 Z" fill="#D1D5DB" stroke="#333" stroke-width="3"/>
+                        <line x1="58" y1="102" x2="142" y2="102" stroke="#9CA3AF" stroke-width="2"/>
+
+                        <!-- Yellow Pencil Body -->
+                        <path d="M 60 110 L 140 110 L 135 200 L 65 200 Z" fill="#FBBF24" stroke="#333" stroke-width="4"/>
+                        <line x1="85" y1="110" x2="87" y2="200" stroke="#F59E0B" stroke-width="3"/>
+                        <line x1="115" y1="110" x2="113" y2="200" stroke="#F59E0B" stroke-width="3"/>
+
+                        <!-- Sharpened Wooden Tip & Lead -->
+                        <path d="M 65 200 L 135 200 L 100 240 Z" fill="#FDE68A" stroke="#333" stroke-width="4"/>
+                        <path d="M 88 226 L 112 226 L 100 240 Z" fill="#1F2937"/>
+
+                        <!-- Left Arm holding Magnifying Glass -->
+                        <path d="M 62 145 Q 28 140 22 115" fill="none" stroke="#333" stroke-width="6" stroke-linecap="round"/>
+                        <circle cx="18" cy="110" r="19" fill="rgba(186, 230, 253, 0.65)" stroke="#78350F" stroke-width="5"/>
+                        <line x1="26" y1="123" x2="38" y2="138" stroke="#78350F" stroke-width="6" stroke-linecap="round"/>
+                        <circle cx="13" cy="105" r="5" fill="white" opacity="0.7"/>
+
+                        <!-- Right Arm -->
+                        <path d="M 138 145 Q 168 135 174 120" fill="none" stroke="#333" stroke-width="6" stroke-linecap="round"/>
+                        <circle cx="175" cy="118" r="6" fill="#FBBF24" stroke="#333" stroke-width="2"/>
+
+                        <!-- Legs -->
+                        <path d="M 80 202 L 74 222 L 62 224" fill="none" stroke="#333" stroke-width="5" stroke-linecap="round"/>
+                        <path d="M 120 202 L 126 222 L 138 224" fill="none" stroke="#333" stroke-width="5" stroke-linecap="round"/>
+
+                        <!-- Eyes -->
+                        <ellipse cx="85" cy="140" rx="12" ry="16" fill="white" stroke="#333" stroke-width="3"/>
+                        <ellipse cx="115" cy="140" rx="12" ry="16" fill="white" stroke="#333" stroke-width="3"/>
+                        <circle id="eye-left" cx="87" cy="142" r="6" fill="#333"/>
+                        <circle id="eye-right" cx="113" cy="142" r="6" fill="#333"/>
+                        <circle cx="84" cy="138" r="2.5" fill="white"/>
+                        <circle cx="110" cy="138" r="2.5" fill="white"/>
+
+                        <!-- Mouth -->
+                        <path id="mouth-path" d="M 92 158 Q 100 168 108 158 Z" fill="#333"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- RIGHT GAME AREA (Strictly ~70% width - Active Interactive Cards Only) -->
+            <div id="interactive-content" class="w-[70%] sm:w-[72%] flex flex-col items-center justify-center relative z-10 h-full pl-1">
+                <!-- Injected via JavaScript renderScene() -->
+            </div>
+
+        </div>
+
+        <!-- 3. BOTTOM MYSTERY TRAIL (Dark Wooden Desk Bar matching Reference Art) -->
+        <footer class="bg-gradient-to-r from-stone-900 via-amber-950 to-stone-900 border-t-4 border-amber-500 px-4 py-2 z-30 shrink-0 shadow-inner">
+            <div class="max-w-4xl mx-auto flex items-center justify-between relative py-1">
+                
+                <!-- Connecting Dashed Line -->
+                <div class="absolute left-8 right-8 top-1/2 -translate-y-[6px] h-0.5 border-t-2 border-dashed border-amber-400/50 z-0"></div>
+
+                <!-- Trail Nodes Container -->
+                <div id="trail-nodes-container" class="w-full flex justify-between relative z-10">
+                    <!-- Injected via JavaScript renderMysteryTrail() -->
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- CLUE NOTEBOOK MODAL -->
+    <div id="clue-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-amber-50 border-4 border-amber-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+            <button onclick="toggleClueModal()" class="absolute top-4 right-4 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-full w-10 h-10 font-bold border-2 border-amber-800 text-lg flex items-center justify-center">✕</button>
+            
+            <div class="flex items-center gap-2 border-b-2 border-amber-300 pb-3 mb-4">
+                <span class="text-3xl">📓</span>
+                <h2 class="text-2xl font-bold text-amber-950 font-heading">Detective Clue Notebook</h2>
+            </div>
+
+            <div id="clue-list" class="space-y-3 max-h-80 overflow-y-auto pr-2">
+                <!-- Clues populated dynamically -->
+            </div>
+
+            <div class="mt-6 pt-3 border-t-2 border-amber-300 text-center">
+                <button onclick="toggleClueModal()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-2 rounded-2xl border-2 border-amber-900 shadow-md">Back to Investigation</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME LOGIC JAVASCRIPT -->
+    <script>
+        // --- GAME STATE VARIABLES ---
+        let currentStep = 0; // 0: Start, 1..6: Clues, 7: Suspect Board, 8: Final Lock, 9: Victory
+        let cluesFound = [];
+        let audioEnabled = true;
+        let showingClueReveal = false; // Tracks if clue reveal card is currently active
+
+        // Sound FX Synthesizer using Web Audio API
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (!audioEnabled || !audioCtx) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now); // A3
+                    osc.frequency.exponentialRampToValueAtTime(164.81, now + 0.2); // E3
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'badge') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+                    osc.frequency.exponentialRampToValueAtTime(1320, now + 0.3);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                }
+            } catch (e) { console.log('Audio play error', e); }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const btn = document.getElementById('audio-toggle');
+            btn.innerText = audioEnabled ? '🔊' : '🔇';
+        }
+
+        // --- GAME DATA STRUCTURES ---
+        const CLUE_CHALLENGES = [
+            {
+                id: 1,
+                location: "Schoolyard",
+                locationIcon: "🏫",
+                bgGradient: "from-amber-950 via-slate-900 to-amber-900",
+                topNum: 54,
+                bottomNum: 21,
+                needsRegroup: false, // 4 >= 1
+                clueIcon: "🐾",
+                clueTitle: "Mysterious Paw Prints",
+                clueText: "Fresh animal paw prints left in the soft dirt outside the office!",
+                clueDetail: "The thief leaves distinct animal paw prints when walking!"
+            },
+            {
+                id: 2,
+                location: "Neighborhood Park",
+                locationIcon: "🛝",
+                bgGradient: "from-emerald-950 via-teal-900 to-slate-950",
+                topNum: 43,
+                bottomNum: 18,
+                needsRegroup: true, // 3 < 8
+                clueIcon: "🧶",
+                clueTitle: "Tuft of Grey Fur",
+                clueText: "A soft piece of grey fur snagged on a park berry bush!",
+                clueDetail: "The suspect has soft grey fur!"
+            },
+            {
+                id: 3,
+                location: "Neighborhood",
+                locationIcon: "🏡",
+                bgGradient: "from-blue-950 via-slate-900 to-indigo-950",
+                topNum: 67,
+                bottomNum: 32,
+                needsRegroup: false, // 7 >= 2
+                clueIcon: "🧗",
+                clueTitle: "Tree Climbing Marks",
+                clueText: "Scratch marks on bark showing the thief climbed high up into a tree!",
+                clueDetail: "The thief is an expert tree climber!"
+            },
+            {
+                id: 4,
+                location: "Forest Trail",
+                locationIcon: "🌲",
+                bgGradient: "from-stone-900 via-emerald-950 to-stone-950",
+                topNum: 71,
+                bottomNum: 26,
+                needsRegroup: true, // 1 < 6
+                clueIcon: "➰",
+                clueTitle: "Ringed Fur Pattern",
+                clueText: "A piece of fur with dark black rings and stripes!",
+                clueDetail: "The suspect has a striped, ringed tail!"
+            },
+            {
+                id: 5,
+                location: "Animal Clubhouse",
+                locationIcon: "🎪",
+                bgGradient: "from-purple-950 via-slate-900 to-indigo-950",
+                topNum: 52,
+                bottomNum: 37,
+                needsRegroup: true, // 2 < 7
+                clueIcon: "🎭",
+                clueTitle: "Bandit Mask Drawing",
+                clueText: "A self-portrait showing a dark black mask pattern around the eyes!",
+                clueDetail: "The thief wears a natural black bandit mask marking!"
+            },
+            {
+                id: 6,
+                location: "Hideout Entrance",
+                locationIcon: "🕳️",
+                bgGradient: "from-zinc-950 via-amber-950 to-black",
+                topNum: 65,
+                bottomNum: 24,
+                needsRegroup: false, // 5 >= 4
+                clueIcon: "✨",
+                clueTitle: "Shiny Golden Wrapper",
+                clueText: "A shiny golden wrapper dropped right outside the hidden cave!",
+                clueDetail: "The thief loves shiny, sparkling gold objects!"
+            }
+        ];
+
+        const SUSPECTS = [
+            { id: 'fox', name: 'Sneaky Fox', icon: '🦊', traits: 'Red fur • Bushy tail', culprit: false },
+            { id: 'raccoon', name: 'Mischievous Raccoon', icon: '🦝', traits: 'Grey fur • Mask • Striped tail', culprit: true },
+            { id: 'squirrel', name: 'Curious Squirrel', icon: '🐿️', traits: 'Brown fur • Fluffy tail', culprit: false },
+            { id: 'rabbit', name: 'Playful Rabbit', icon: '🐰', traits: 'White/Brown • Long ears', culprit: false }
+        ];
+
+        const TRAIL_LOCATIONS = [
+            { label: "Office", icon: "🏢" },
+            { label: "Schoolyard", icon: "🏫" },
+            { label: "Park", icon: "🛝" },
+            { label: "Forest Trail", icon: "🌲" },
+            { label: "Clubhouse", icon: "🎪" },
+            { label: "Hideout", icon: "🕳️" },
+            { label: "Case Closed", icon: "🛡️" }
+        ];
+
+        // --- RENDER GAME SCENES ---
+        function renderScene() {
+            const viewport = document.getElementById('scene-viewport');
+            const content = document.getElementById('interactive-content');
+            const speechText = document.getElementById('speech-text');
+
+            document.getElementById('clue-count-badge').innerText = `${cluesFound.length}/6`;
+            setPencilExpression('normal');
+            renderMysteryTrail();
+
+            if (currentStep === 0) {
+                // SCENE 0: OPENING DETECTIVE OFFICE
+                viewport.className = "relative flex-1 bg-gradient-to-br from-amber-900 via-amber-950 to-stone-900 overflow-hidden flex flex-row p-3 sm:p-5 gap-4 transition-all duration-700 items-stretch";
+                
+                speechText.innerHTML = "OH NO! My special <span class='text-amber-600 font-extrabold underline'>Golden Badge</span> is missing! Someone took it from me!";
+
+                content.innerHTML = `
+                    <div class="storybook-panel p-5 sm:p-7 text-center max-w-lg mx-auto border-amber-400 animate-float w-full shadow-2xl">
+                        <div class="relative w-24 h-24 mx-auto mb-3 flex items-center justify-center border-4 border-dashed border-amber-500/80 rounded-3xl bg-amber-100/50 shadow-inner">
+                            <span class="text-5xl opacity-80">🛡️</span>
+                            <span class="absolute -top-3 -right-3 bg-red-500 text-white font-extrabold text-xs px-2.5 py-1 rounded-full animate-pulse shadow-md">MISSING!</span>
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-black text-amber-950 mb-2 font-heading tracking-tight">The Case of the Missing Badge</h2>
+                        <p class="text-stone-700 font-bold text-xs sm:text-sm mb-6 leading-relaxed max-w-md mx-auto">
+                            Someone in the neighborhood secretly took the badge!<br>Solve the subtraction clues to follow their trail and crack the case!
+                        </p>
+                        <button onclick="startMystery()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-base sm:text-lg font-extrabold px-8 py-3.5 rounded-2xl border-b-4 border-emerald-900 shadow-xl transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2.5 mx-auto">
+                            <span>🔍</span> START THE CASE! <span>🚀</span>
+                        </button>
+                    </div>
+                `;
+            } 
+            else if (currentStep >= 1 && currentStep <= CLUE_CHALLENGES.length) {
+                const challenge = CLUE_CHALLENGES[currentStep - 1];
+                viewport.className = `relative flex-1 bg-gradient-to-br ${challenge.bgGradient} overflow-hidden flex flex-row p-3 sm:p-5 gap-4 transition-all duration-700 items-stretch`;
+
+                if (showingClueReveal) {
+                    // CLUE UNLOCKED STORY CARD (Student clicks button to advance)
+                    speechText.innerHTML = `Aha! We solved the math problem and discovered <b>Clue #${challenge.id}</b>!`;
+                    setPencilExpression('happy');
+
+                    content.innerHTML = `
+                        <div class="w-full max-w-md mx-auto">
+                            <div class="storybook-panel p-5 sm:p-6 shadow-2xl text-center border-amber-400 bg-[#fffdf5] animate-float">
+                                <div class="inline-flex items-center gap-1.5 bg-amber-200 text-amber-950 border-2 border-amber-500 px-4 py-1 rounded-full text-xs font-black mb-3 shadow-sm">
+                                    <span>🔍</span> EVIDENCE DISCOVERED!
+                                </div>
+                                
+                                <div class="w-20 h-20 bg-amber-100 rounded-2xl border-4 border-amber-400 mx-auto flex items-center justify-center text-4xl shadow-md my-2">
+                                    ${challenge.clueIcon}
+                                </div>
+
+                                <h3 class="text-xl font-black text-amber-950 font-heading mb-1">${challenge.clueTitle}</h3>
+                                
+                                <p class="text-stone-800 font-bold text-xs sm:text-sm bg-amber-50 border-2 border-amber-300 p-3 rounded-xl my-3 text-left leading-relaxed">
+                                    "${challenge.clueText}"
+                                </p>
+
+                                <div class="bg-amber-100/80 border border-amber-400 p-2 rounded-lg text-xs font-bold text-amber-900 mb-4">
+                                    📌 Notebook updated: <span class="text-amber-950 font-extrabold">${challenge.clueDetail}</span>
+                                </div>
+
+                                <button onclick="nextClueStep()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm sm:text-base font-extrabold py-3 px-6 rounded-2xl border-b-4 border-emerald-900 shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 mx-auto">
+                                    <span>CONTINUE INVESTIGATION</span> <span>➔</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // SUBTRACTION QUESTION CARD
+                    speechText.innerHTML = `Clue #${challenge.id} in ${challenge.location}! Does this problem need <b>REGROUPING</b>?`;
+
+                    content.innerHTML = `
+                        <div class="w-full max-w-md mx-auto">
+                            <div class="storybook-panel p-4 sm:p-6 shadow-2xl text-center border-amber-400 relative">
+                                
+                                <!-- Location Badge -->
+                                <div class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-950 border-2 border-amber-400 px-3.5 py-1 rounded-full text-xs font-extrabold mb-3 shadow-sm">
+                                    <span>${challenge.locationIcon}</span> ${challenge.location}
+                                </div>
+
+                                <!-- Vertical Subtraction Card -->
+                                <div class="bg-slate-900 text-white rounded-2xl p-4 my-2 shadow-inner border-4 border-slate-700 flex flex-col items-center justify-center">
+                                    <div class="font-mono text-3xl sm:text-4xl font-black tracking-widest text-amber-300 grid grid-cols-2 gap-x-6 text-right">
+                                        <div class="text-amber-400 text-xs text-center col-span-2 grid grid-cols-2 border-b border-slate-700 pb-1 mb-2 font-sans font-bold">
+                                            <span>TENS</span>
+                                            <span id="ones-header" class="text-yellow-300">ONES</span>
+                                        </div>
+                                        <span class="text-slate-300">${Math.floor(challenge.topNum / 10)}</span>
+                                        <span id="top-ones-digit" class="text-white">${challenge.topNum % 10}</span>
+                                        <span class="text-slate-300">-${Math.floor(challenge.bottomNum / 10)}</span>
+                                        <span id="bottom-ones-digit" class="text-white">${challenge.bottomNum % 10}</span>
+                                    </div>
+                                    <div class="w-36 sm:w-44 h-1.5 bg-amber-400 my-2 rounded-full"></div>
+                                    <div class="text-slate-400 text-2xl font-bold font-mono">?</div>
+                                </div>
+
+                                <!-- Detective Prompt -->
+                                <p class="text-stone-800 font-bold text-xs sm:text-sm my-2.5">
+                                    Look at the <span class="text-blue-600 underline font-extrabold">ONES</span> place (<span class="text-amber-800 font-black">${challenge.topNum % 10}</span> & <span class="text-amber-800 font-black">${challenge.bottomNum % 10}</span>). Do you have enough ones to subtract?
+                                </p>
+
+                                <!-- Decision Buttons -->
+                                <div class="grid grid-cols-2 gap-3 mt-3">
+                                    <button onclick="checkRegroupAnswer(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm sm:text-base font-extrabold py-3 px-2 rounded-2xl border-b-4 border-emerald-900 shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-1.5">
+                                        <span>🔄</span> REGROUP!
+                                    </button>
+                                    <button onclick="checkRegroupAnswer(false)" class="bg-rose-600 hover:bg-rose-700 text-white text-sm sm:text-base font-extrabold py-3 px-2 rounded-2xl border-b-4 border-rose-900 shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-1.5">
+                                        <span>🚫</span> NO REGROUPING!
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            else if (currentStep === CLUE_CHALLENGES.length + 1) {
+                // SUSPECT BOARD (Step 7)
+                viewport.className = "relative flex-1 bg-gradient-to-br from-amber-950 via-stone-900 to-slate-950 overflow-hidden flex flex-row p-3 sm:p-5 gap-4 transition-all duration-700 items-stretch";
+
+                speechText.innerHTML = "We collected all 6 clues! Compare the clues with our suspects! Who took the badge?";
+
+                content.innerHTML = `
+                    <div class="storybook-panel p-4 sm:p-5 shadow-2xl max-w-xl mx-auto w-full border-amber-500 bg-[#fffdf5]">
+                        <div class="text-center mb-2">
+                            <h2 class="text-2xl font-black text-amber-950 font-heading">Suspect Board</h2>
+                            <p class="text-stone-700 font-bold text-xs">Which animal matches ALL 6 clues?</p>
+                        </div>
+
+                        <!-- 4 Suspect Cards -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 my-2">
+                            ${SUSPECTS.map(s => `
+                                <button onclick="selectSuspect('${s.id}')" class="bg-white hover:bg-amber-100 border-2 border-amber-400 hover:border-amber-600 rounded-2xl p-2 text-center shadow-md transition-all transform hover:-translate-y-1 active:scale-95 flex flex-col items-center justify-between">
+                                    <span class="text-3xl my-0.5">${s.icon}</span>
+                                    <h3 class="font-black text-amber-950 text-xs font-heading leading-tight">${s.name}</h3>
+                                    <span class="text-[9px] font-bold text-slate-500 mt-1">${s.traits}</span>
+                                    <span class="text-[9px] font-black text-amber-900 mt-1 bg-amber-200 px-2 py-0.5 rounded-full border border-amber-400 w-full">SELECT</span>
+                                </button>
+                            `).join('')}
+                        </div>
+
+                        <!-- Collected Clues Checklist -->
+                        <div class="bg-amber-100/90 border-2 border-amber-400 rounded-xl p-2.5 text-[11px] text-amber-950 mt-2 shadow-inner">
+                            <span class="font-black text-amber-900 block text-xs mb-1 text-center">🔍 Master Clue Checklist (6/6 Discovered):</span>
+                            <div class="grid grid-cols-2 gap-x-2 gap-y-0.5 font-bold text-[10px] text-slate-800">
+                                <div>🐾 1. Paw prints</div>
+                                <div>🧶 2. Soft grey fur</div>
+                                <div>🧗 3. Tree climber</div>
+                                <div>🦝 4. Striped/ringed tail</div>
+                                <div>🎭 5. Bandit mask pattern</div>
+                                <div>✨ 6. Loves shiny gold</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            else if (currentStep === CLUE_CHALLENGES.length + 2) {
+                // FINAL MATH CASE (Step 8)
+                viewport.className = "relative flex-1 bg-gradient-to-br from-slate-900 via-zinc-950 to-black overflow-hidden flex flex-row p-3 sm:p-5 gap-4 transition-all duration-700 items-stretch";
+
+                speechText.innerHTML = "We found the hideout! Unlock the final door with math: <b>62 − 27</b>!";
+
+                content.innerHTML = `
+                    <div class="w-full max-w-md mx-auto">
+                        <div class="storybook-panel p-4 sm:p-6 shadow-2xl text-center border-amber-400">
+                            <div class="inline-flex items-center gap-1.5 bg-rose-100 text-rose-950 border-2 border-rose-400 px-3.5 py-1 rounded-full text-xs font-extrabold mb-2 shadow-sm">
+                                🔒 FINAL CASE DOOR LOCK
+                            </div>
+
+                            <div class="bg-slate-900 text-white rounded-2xl p-4 my-2 shadow-inner border-4 border-slate-700 flex flex-col items-center justify-center">
+                                <div class="font-mono text-3xl sm:text-4xl font-black tracking-widest text-amber-300 grid grid-cols-2 gap-x-6 text-right">
+                                    <div class="text-amber-400 text-xs text-center col-span-2 grid grid-cols-2 border-b border-slate-700 pb-1 mb-2 font-sans font-bold">
+                                        <span>TENS</span>
+                                        <span class="text-yellow-300">ONES</span>
+                                    </div>
+                                    <span class="text-slate-300">6</span>
+                                    <span class="text-white">2</span>
+                                    <span class="text-slate-300">-2</span>
+                                    <span class="text-white">7</span>
+                                </div>
+                                <div class="w-36 h-1.5 bg-amber-400 my-2 rounded-full"></div>
+                                <div class="text-amber-400 text-2xl font-black font-mono">?</div>
+                            </div>
+
+                            <div id="final-step-1">
+                                <p class="text-stone-800 font-bold text-xs sm:text-sm my-2">First: Does <span class="font-black text-amber-800">62 − 27</span> need regrouping?</p>
+                                <div class="grid grid-cols-2 gap-3 mt-3">
+                                    <button onclick="checkFinalRegroup(true)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3 px-2 rounded-2xl shadow-lg border-b-4 border-indigo-900 text-xs sm:text-sm">
+                                        YES! REGROUP
+                                    </button>
+                                    <button onclick="checkFinalRegroup(false)" class="bg-rose-600 hover:bg-rose-700 text-white font-extrabold py-3 px-2 rounded-2xl shadow-lg border-b-4 border-rose-900 text-xs sm:text-sm">
+                                        NO REGROUPING
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="final-step-2" class="hidden">
+                                <p class="text-emerald-700 font-black text-xs sm:text-sm my-2">Correct! 2 is smaller than 7! What is 62 − 27?</p>
+                                <div class="flex items-center justify-center gap-3 my-3">
+                                    <input type="number" id="final-answer-input" placeholder="??" class="w-24 text-center text-2xl font-black p-2.5 border-4 border-amber-500 rounded-2xl bg-amber-50 text-amber-950 focus:outline-none focus:ring-4 focus:ring-amber-300 shadow-inner">
+                                    <button onclick="submitFinalAnswer()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm px-6 py-3 rounded-2xl border-b-4 border-emerald-900 shadow-lg">
+                                        UNLOCK! 🔑
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            else if (currentStep === CLUE_CHALLENGES.length + 3) {
+                // SCENE ENDING: CASE CLOSED CELEBRATION (Step 9)
+                viewport.className = "relative flex-1 bg-gradient-to-br from-amber-500 via-yellow-400 to-amber-600 overflow-hidden flex flex-row p-3 sm:p-5 gap-4 transition-all duration-700 items-stretch";
+
+                speechText.innerHTML = "Hooray! The Mischievous Raccoon returned my Golden Badge!";
+                setPencilExpression('happy');
+
+                playSound('badge');
+                if (window.confetti) {
+                    window.confetti({ particleCount: 140, spread: 90, origin: { y: 0.6 } });
+                }
+
+                content.innerHTML = `
+                    <div class="storybook-panel p-5 sm:p-7 text-center max-w-lg mx-auto border-amber-400 shadow-2xl animate-float w-full">
+                        
+                        <div class="relative w-24 h-28 mx-auto mb-2 flex items-center justify-center">
+                            <div class="absolute inset-0 bg-yellow-300 rounded-full blur-xl opacity-80 animate-pulse"></div>
+                            <svg viewBox="0 0 100 120" class="w-full h-full drop-shadow-2xl relative z-10">
+                                <path d="M 50 5 L 90 25 L 90 70 Q 50 115 50 115 Q 50 115 10 70 L 10 25 Z" fill="url(#badgeGrad)" stroke="#B45309" stroke-width="4"/>
+                                <defs>
+                                    <linearGradient id="badgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#FFE066" />
+                                        <stop offset="50%" stop-color="#F59E0B" />
+                                        <stop offset="100%" stop-color="#D97706" />
+                                    </linearGradient>
+                                </defs>
+                                <polygon points="50,25 58,40 75,42 62,54 66,71 50,62 34,71 38,54 25,42 42,40" fill="#FFF" stroke="#B45309" stroke-width="1.5"/>
+                                <text x="50" y="90" text-anchor="middle" fill="#78350F" font-weight="bold" font-size="9" font-family="Fredoka">MATH HERO</text>
+                            </svg>
+                        </div>
+
+                        <h2 class="text-3xl font-black text-amber-950 mb-1 font-heading">CASE CLOSED!</h2>
+                        <p class="text-amber-900 font-extrabold text-sm sm:text-base mb-3">
+                            Regrouping Detective Badge Earned! 🎖️
+                        </p>
+                        
+                        <div class="bg-amber-100/90 border-2 border-amber-400 rounded-2xl p-3 mb-4 text-xs text-slate-800 text-left flex items-center gap-3">
+                            <span class="text-4xl shrink-0">🦝</span>
+                            <div>
+                                <span class="font-extrabold text-amber-950 block">Mischievous Raccoon says:</span>
+                                "I'm so sorry Detective Pencil! I saw the shiny golden star and couldn't resist showing it off! Here is your badge back!"
+                            </div>
+                        </div>
+
+                        <button onclick="resetGame()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-base font-extrabold px-8 py-3.5 rounded-2xl border-b-4 border-emerald-900 shadow-xl transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 mx-auto">
+                            <span>🔄</span> PLAY AGAIN
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // --- UPDATE BOTTOM MYSTERY TRAIL BAR ---
+        function renderMysteryTrail() {
+            const container = document.getElementById('trail-nodes-container');
+
+            let activeTrailIndex = 0;
+            if (currentStep === 0) activeTrailIndex = 0;
+            else if (currentStep >= 1 && currentStep <= 6) activeTrailIndex = currentStep - 1;
+            else if (currentStep === 7) activeTrailIndex = 5; 
+            else if (currentStep >= 8) activeTrailIndex = 6; 
+
+            container.innerHTML = TRAIL_LOCATIONS.map((loc, idx) => {
+                const isVisited = idx <= activeTrailIndex;
+                const isCurrent = idx === activeTrailIndex;
+                const isCaseClosedNode = idx === 6;
+
+                let iconDisplay = loc.icon;
+                if (isCurrent) {
+                    iconDisplay = "✏️";
+                } else if (!isVisited && !isCaseClosedNode) {
+                    iconDisplay = "❓";
+                } else if (!isVisited && isCaseClosedNode) {
+                    iconDisplay = "🛡️";
+                }
+
+                return `
+                    <div class="flex flex-col items-center gap-1 group relative">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-300 ${
+                            isCurrent 
+                                ? 'bg-amber-400 text-amber-950 ring-4 ring-amber-300 scale-110 shadow-lg font-black' 
+                                : isVisited 
+                                    ? 'bg-amber-500/80 text-white border-2 border-amber-300' 
+                                    : 'bg-stone-800/90 text-stone-400 border-2 border-stone-700'
+                        }">
+                            <span>${iconDisplay}</span>
+                        </div>
+                        <span class="text-[10px] sm:text-xs font-bold ${isCurrent ? 'text-amber-300 font-black' : isVisited ? 'text-stone-300' : 'text-stone-500'} font-sans">
+                            ${loc.label}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- EXPRESSIONS HELPER ---
+        function setPencilExpression(type) {
+            const mouth = document.getElementById('mouth-path');
+            if (!mouth) return;
+            if (type === 'happy') {
+                mouth.setAttribute('d', 'M 88 152 Q 100 174 112 152 Z');
+            } else if (type === 'thinking') {
+                mouth.setAttribute('d', 'M 90 160 Q 100 152 110 160');
+            } else {
+                mouth.setAttribute('d', 'M 92 158 Q 100 168 108 158 Z');
+            }
+        }
+
+        // --- GAME ACTIONS ---
+        function startMystery() {
+            playSound('correct');
+            currentStep = 1;
+            showingClueReveal = false;
+            renderScene();
+        }
+
+        function checkRegroupAnswer(userGuessedRegroup) {
+            const challenge = CLUE_CHALLENGES[currentStep - 1];
+            const speechText = document.getElementById('speech-text');
+
+            if (userGuessedRegroup === challenge.needsRegroup) {
+                // Correct answer!
+                playSound('correct');
+                setPencilExpression('happy');
+
+                // Add clue detail to notebook array
+                if (!cluesFound.includes(challenge.clueDetail)) {
+                    cluesFound.push(challenge.clueDetail);
+                }
+
+                // Show clue story card
+                showingClueReveal = true;
+                renderScene();
+            } else {
+                // Wrong answer - visual hint
+                playSound('wrong');
+                setPencilExpression('thinking');
+
+                const topDigit = document.getElementById('top-ones-digit');
+                const bottomDigit = document.getElementById('bottom-ones-digit');
+                const header = document.getElementById('ones-header');
+
+                if (topDigit) topDigit.classList.add('ones-highlight');
+                if (bottomDigit) bottomDigit.classList.add('ones-highlight');
+                if (header) header.classList.add('ones-highlight');
+
+                speechText.innerHTML = `Hmm... let's inspect the <b>ONES</b> place again! Is <b>${challenge.topNum % 10}</b> smaller than <b>${challenge.bottomNum % 10}</b>?`;
+            }
+        }
+
+        function nextClueStep() {
+            playSound('correct');
+            showingClueReveal = false;
+            currentStep++;
+            renderScene();
+        }
+
+        function selectSuspect(suspectId) {
+            const speechText = document.getElementById('speech-text');
+            if (suspectId === 'raccoon') {
+                playSound('correct');
+                speechText.innerHTML = "<b>BINGO!</b> The Mischievous Raccoon matches ALL 6 clues! Quick, follow him to his hideout!";
+                setTimeout(() => {
+                    currentStep++; // Move to Final Lock
+                    renderScene();
+                }, 1600);
+            } else {
+                playSound('wrong');
+                setPencilExpression('thinking');
+                speechText.innerHTML = "Hmm... let's check our clues again! That animal doesn't match all 6 clues!";
+            }
+        }
+
+        function checkFinalRegroup(userChoice) {
+            const speechText = document.getElementById('speech-text');
+            if (userChoice === true) {
+                playSound('correct');
+                document.getElementById('final-step-1').classList.add('hidden');
+                document.getElementById('final-step-2').classList.remove('hidden');
+                speechText.innerHTML = "<b>Awesome!</b> 2 is smaller than 7, so we REGROUP! Now solve 62 − 27!";
+            } else {
+                playSound('wrong');
+                speechText.innerHTML = "Look at the ones: <b>2</b> is smaller than <b>7</b>! So we DO need regrouping!";
+            }
+        }
+
+        function submitFinalAnswer() {
+            const val = parseInt(document.getElementById('final-answer-input').value, 10);
+            const speechText = document.getElementById('speech-text');
+            if (val === 35) {
+                playSound('badge');
+                currentStep++; // Move to victory screen
+                renderScene();
+            } else {
+                playSound('wrong');
+                speechText.innerHTML = "Trade one ten for 10 ones and try again! What is <b>62 − 27</b>?";
+            }
+        }
+
+        function resetGame() {
+            currentStep = 0;
+            cluesFound = [];
+            renderScene();
+        }
+
+        function toggleClueModal() {
+            const modal = document.getElementById('clue-modal');
+            const list = document.getElementById('clue-list');
+            modal.classList.toggle('hidden');
+
+            if (!modal.classList.contains('hidden')) {
+                if (cluesFound.length === 0) {
+                    list.innerHTML = `<p class="text-amber-800 italic text-center py-6">No clues discovered yet! Solve math clues to investigate the case.</p>`;
+                } else {
+                    list.innerHTML = cluesFound.map((clue, i) => `
+                        <div class="bg-amber-100 border-2 border-amber-400 rounded-xl p-3 flex items-start gap-2.5 shadow-sm text-xs sm:text-sm font-bold text-amber-950">
+                            <span class="text-lg">🔍</span>
+                            <div>
+                                <span class="font-extrabold text-amber-900 block">Clue #${i + 1}</span>
+                                ${clue}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+
+        // --- INITIALIZE GAME ON WINDOW LOAD ---
+        window.onload = function() {
+            renderScene();
+        };
+    </script>
+</body>
+</html>
